@@ -11,5 +11,8 @@
     "url": "git+https://github.com/rahkhadi/fragments.git"
   },
   "author": "Your Full Name",
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "prettier": "3.5.3"
+  }
 }
