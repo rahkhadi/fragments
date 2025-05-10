@@ -14,7 +14,7 @@
     "type": "git",
     "url": "git+https://github.com/rahkhadi/fragments.git"
   },
-  "author": "Your Full Name",
+  "author": "Rahimullah Khadim Hussain",
   "license": "UNLICENSED",
   "devDependencies": {
     "@eslint/js": "^9.26.0",
