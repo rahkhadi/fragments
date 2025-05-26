@@ -8,6 +8,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 
 // author and version from our package.json file
+const { createErrorResponse } = require('./response');
 
 const logger = require('./logger');
 const pino = require('pino-http')({
@@ -57,6 +58,10 @@ app.use((err, req, res) => {
       code: status,
     },
   });
+});
+
+app.use((req, res) => {
+  res.status(404).json(createErrorResponse(404, 'not found'));
 });
 
 module.exports = app;
