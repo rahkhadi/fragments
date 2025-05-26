@@ -8,7 +8,6 @@ const helmet = require('helmet');
 const compression = require('compression');
 
 // author and version from our package.json file
-const { author, version } = require('../package.json');
 
 const logger = require('./logger');
 const pino = require('pino-http')({
@@ -43,7 +42,7 @@ app.use((req, res) => {
 });
 
 // Global error handler
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   const status = err.status || 500;
   const message = err.message || 'unable to process request';
 
