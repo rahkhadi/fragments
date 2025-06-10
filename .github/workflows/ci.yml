@@ -10,9 +10,13 @@ on:
   pull_request:
     branches:
       - main
+      - assignment-1
+
   push:
     branches:
       - main
+      - assignment-1
+
 
 # modifications to .github/workflows/ci.yml
 
