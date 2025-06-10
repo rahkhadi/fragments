@@ -12,7 +12,7 @@ const rawBody = () =>
       try {
         const { type } = contentType.parse(req);
         return Fragment.isSupportedType(type);
-      } catch (err) {
+      } catch {
         return false;
       }
     },
