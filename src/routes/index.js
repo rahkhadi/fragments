@@ -16,10 +16,8 @@ const { authenticate } = require('../auth');
 router.use('/v1', authenticate(), require('./api'));
 
 /**
- * Define a simple health check route. If the server is running
- * we'll respond with a 200 OK.  If not, the server isn't healthy.
+ * Define a simple root route for system metadata.
  */
-
 router.get('/', (req, res) => {
   res.setHeader('Cache-Control', 'no-cache');
   res.status(200).json(
@@ -29,6 +27,13 @@ router.get('/', (req, res) => {
       version,
     })
   );
+});
+
+/**
+ * Define a health check route.
+ */
+router.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
 });
 
 module.exports = router;
