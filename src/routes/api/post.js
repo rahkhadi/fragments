@@ -9,7 +9,7 @@ module.exports = async (req, res) => {
 
   if (!ownerId || !Buffer.isBuffer(req.body)) {
     logger.warn({ ownerId }, 'Missing ownerId or body');
-    return res.status(400).json({ status: 'error', message: 'Invalid request' });
+    return res.status(415).json({ status: 'error', message: 'Invalid request' });
   }
 
   try {
