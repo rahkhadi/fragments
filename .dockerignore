@@ -1,4 +1,3 @@
-# Safe to ignore
 node_modules
 coverage
 .env
@@ -9,7 +8,6 @@ coverage
 .prettier*
 jest*
 
-# Keep all source files and tests
 !src/
 !src/model/
 !tests/
