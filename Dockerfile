@@ -14,8 +14,9 @@
     COPY package*.json ./
     RUN npm ci
     
-    # Copy source code
+    # Copy all source code explicitly
     COPY ./src ./src
+    COPY ./src/model ./src/model         
     COPY ./tests/.htpasswd ./tests/.htpasswd
     
     # --- Stage 2: Production image (smaller) ---
