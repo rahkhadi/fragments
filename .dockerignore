@@ -1,12 +1,15 @@
-# .github/
-# .vscode/
-# coverage/
-# node_modules/
-# tests/
-# !tests/.htpasswd
-# .env
-# eslint.config.mjs
-# .git/
-# .gitignore
-# .prettier*
-# jest*
+# Safe to ignore
+node_modules
+coverage
+.env
+.git
+.gitignore
+.vscode
+.DS_Store
+.prettier*
+jest*
+
+# Keep all source files and tests
+!src/
+!tests/
+!tests/.htpasswd
