@@ -3,7 +3,7 @@ const MarkdownIt = require('markdown-it');
 const md = new MarkdownIt();
 const router = express.Router();
 const { Fragment } = require('../../model/fragment');
-const authMiddleware = require('../../middleware/auth-middleware');  // Use your auth middleware wrapper here!
+const authMiddleware = require('../../auth/auth-middleware');  // Use your auth middleware wrapper here!
 
 router.get('/fragments/:id.:ext', authMiddleware('http'), async (req, res) => {
   const { id, ext } = req.params;
