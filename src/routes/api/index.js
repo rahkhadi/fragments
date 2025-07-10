@@ -1,6 +1,3 @@
-/**
- * The main entry-point for the v1 version of the fragments API.
- */
 const express = require('express');
 const router = express.Router();
 
@@ -10,10 +7,10 @@ const get = require('./get');
 const getById = require('./get-id');
 const getExtension = require('./get-extension');
 
-// Define routes
+// Define routes (important: order matters!)
 router.get('/fragments', get);
 router.post('/fragments', rawBody(), post);
 router.get('/fragments/:id', getById);
-router.get('/fragments/:id.:ext', getExtension);  // Fix here: explicitly define this GET route
+router.get('/fragments/:id.:ext', getExtension); 
 
 module.exports = router;

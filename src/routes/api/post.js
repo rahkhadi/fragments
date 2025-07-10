@@ -1,12 +1,12 @@
-// src/routes/api/post.js
-
 const { Fragment } = require('../../model/fragment');
 const logger = require('../../logger');
 
 module.exports = async (req, res) => {
-  const ownerId = req.user;
+  const ownerId = req.user;  // NOTE: req.user is already hashed by auth middleware
   const type = req.headers['content-type'];
 
+  logger.debug({ ownerId, bodyType: typeof req.body, isBuffer: Buffer.isBuffer(req.body), contentType: type }, 'Debugging POST');
+  
   if (!ownerId || !Buffer.isBuffer(req.body)) {
     logger.warn({ ownerId }, 'Missing ownerId or body');
     return res.status(415).json({ status: 'error', message: 'Invalid request' });
