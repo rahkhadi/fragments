@@ -28,8 +28,12 @@ app.use(compression());
 passport.use(authenticate.strategy());
 app.use(passport.initialize());
 
+// Authenticate all routes under /v1
+app.use('/v1', authenticate());
+
 // Routes
 app.use('/', require('./routes'));
+
 
 // 404 handler
 app.use((req, res) => {
