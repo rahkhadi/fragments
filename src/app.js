@@ -1,16 +1,15 @@
 // src/app.js
 
 const passport = require('passport');
-const authenticate = require('./auth');
+const auth = require('./auth');  // FIX: use a proper name to reflect it's the whole auth module
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 
-// author and version from our package.json file
 const { createErrorResponse } = require('./response');
-
 const logger = require('./logger');
+
 const pino = require('pino-http')({
   logger,
 });
@@ -25,15 +24,14 @@ app.use(cors());
 app.use(compression());
 
 // Passport authentication middleware
-passport.use(authenticate.strategy());
+passport.use(auth.strategy());   // FIX: use auth.strategy()
 app.use(passport.initialize());
 
 // Authenticate all routes under /v1
-app.use('/v1', authenticate());
+app.use('/v1', auth.authenticate());  // FIX: use auth.authenticate()
 
 // Routes
 app.use('/', require('./routes'));
-
 
 // 404 handler
 app.use((req, res) => {
@@ -62,10 +60,6 @@ app.use((err, req, res) => {
       code: status,
     },
   });
-});
-
-app.use((req, res) => {
-  res.status(404).json(createErrorResponse(404, 'not found'));
 });
 
 module.exports = app;
