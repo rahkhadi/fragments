@@ -8,6 +8,7 @@ coverage
 .prettier*
 jest*
 
+# Keep all source files and tests
 !src/
 !src/model/
 !tests/
