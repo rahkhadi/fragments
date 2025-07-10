@@ -3,10 +3,11 @@ const MarkdownIt = require('markdown-it');
 const md = new MarkdownIt();
 const router = express.Router();
 const { Fragment } = require('../../model/fragment');
+const authenticate = require('../../auth');  // ✅ Ensure auth middleware is imported
 
-router.get('/fragments/:id.:ext', async (req, res) => {
+router.get('/fragments/:id.:ext', authenticate(), async (req, res) => {  // ✅ Add auth middleware
   const { id, ext } = req.params;
-  const ownerId = req.user;  // ensure this matches hashed user
+  const ownerId = req.user;  // Already hashed in auth middleware
 
   try {
     const fragment = await Fragment.byId(ownerId, id);
