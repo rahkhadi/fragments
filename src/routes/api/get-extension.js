@@ -6,10 +6,10 @@ const { Fragment } = require('../../model/fragment');
 
 router.get('/fragments/:id.:ext', async (req, res) => {
   const { id, ext } = req.params;
-  const user = req.user;
+  const ownerId = req.user;
 
   try {
-    const fragment = await Fragment.byId(user, id);
+    const fragment = await Fragment.byId(ownerId, id);
 
     if (!fragment) {
       return res.status(404).json({ status: 'error', message: 'Fragment not found' });
