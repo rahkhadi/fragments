@@ -18,8 +18,6 @@ on:
       - assignment-1
 
 
-# modifications to .github/workflows/ci.yml
-
 jobs:
   lint:
     name: ESLint
@@ -39,6 +37,17 @@ jobs:
 
       - name: Run ESLint
         run: npm run lint
+
+  # Lint our Dockerfile using Hadolint
+  dockerfile-lint:
+    name: Dockerfile Lint
+    runs-on: ubuntu-latest
+    steps:
+      # https://github.com/marketplace/actions/hadolint-action
+      - uses: actions/checkout@v4
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
 
   unit-tests:
     name: Unit Tests
@@ -62,5 +71,37 @@ jobs:
         # - npm test
         #
         # 2. Use `install-ci-test` to do it in a single command, see https://docs.npmjs.com/cli/v8/commands/npm-install-ci-test
-        # run: npm install-ci-test
         run: npm install-ci-test
+
+  docker-hub:
+    name: Build and Push to Docker Hub
+    # Don't bother running this job unless the other three all pass
+    needs: [lint, dockerfile-lint, unit-tests]
+    runs-on: ubuntu-latest
+    steps:
+      # Set up buildx for optimal Docker Builds, see:
+      # https://github.com/docker/setup-buildx-action
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Login to Docker Hub using GitHub secrets, see:
+      # https://github.com/docker/login-action
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Build and Push an Image to Docker Hub
+      - name: Build and push Docker image to Docker Hub
+        env:
+          # Define an Environment Variable with our Docker Hub Repo
+          # Replace `rahkhadi` with your Docker Hub username if different
+          DOCKERHUB_REPO: rahkhadi/fragments
+          # Define an Environment Variable with the current git commit's sha
+          SHA_TAG: sha-${{ github.sha }}
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          # Use 3 tags: :sha-xxxx, :main, and :latest
+          tags: ${{ env.DOCKERHUB_REPO }}:${{ env.SHA_TAG }}, ${{ env.DOCKERHUB_REPO }}:main, ${{ env.DOCKERHUB_REPO }}:latest
