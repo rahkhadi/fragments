@@ -7,7 +7,6 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 
-const { createErrorResponse } = require('./response');
 const logger = require('./logger');
 
 const pino = require('pino-http')({
