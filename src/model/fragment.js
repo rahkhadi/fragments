@@ -85,6 +85,8 @@ class Fragment {
     const { type } = contentType.parse(value);
     const supportedTypes = [
       'text/plain',
+      'text/markdown',      
+      'application/json'    
       // Add more supported types later
     ];
     return supportedTypes.includes(type);
