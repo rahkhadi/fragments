@@ -17,8 +17,9 @@ module.exports = async (req, res) => {
     await fragment.save();
     await fragment.setData(req.body);
 
-    const host = process.env.API_URL || `http://${req.headers.host}`;
-    const location = `${host}/v1/fragments/${fragment.id}`;
+    const host = 'http://ec2-52-90-4-140.compute-1.amazonaws.com:8080';
+const location = `${host}/v1/fragments/${fragment.id}`;
+
 
     res.status(201).setHeader('Location', location).json({ status: 'ok', fragment });
   } catch (err) {
