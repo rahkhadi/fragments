@@ -17,8 +17,9 @@ module.exports = async (req, res) => {
     await fragment.save();
     await fragment.setData(req.body);
 
-    const host = 'http://ec2-52-90-4-140.compute-1.amazonaws.com:8080';
-const location = `${host}/v1/fragments/${fragment.id}`;
+    const protocol = req.protocol || 'http';  // Automatically detect 'http' or 'https'
+    const host = req.get('host');             // Get the actual hostname and port used in request
+    const location = `${protocol}://${host}/v1/fragments/${fragment.id}`;
 
 
     res.status(201).setHeader('Location', location).json({ status: 'ok', fragment });

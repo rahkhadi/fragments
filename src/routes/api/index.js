@@ -10,14 +10,14 @@ const getInfo = require('./get-info');
 const getExtension = require('./get-extension');
 const authenticate = require('../../auth/auth-middleware');
 
-router.get('/fragments', get);
-router.post('/fragments', rawBody(), post);
-router.get('/fragments/:id', getById);
-router.get('/fragments/:id/info', getInfo);
+// Ensure auth middleware is applied on all secured routes
+router.get('/fragments', authenticate('http'), get);
+router.post('/fragments', authenticate('http'), rawBody(), post);
+router.get('/fragments/:id', authenticate('http'), getById);
+router.get('/fragments/:id/info', authenticate('http'), getInfo);
 router.get('/fragments/:id.:ext', authenticate('http'), getExtension);
 
 module.exports = router;
-
 
 
 
