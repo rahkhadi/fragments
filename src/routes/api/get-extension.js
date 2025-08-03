@@ -13,13 +13,23 @@ router.get('/fragments/:id.:ext', async (req, res) => {
     const fragment = await Fragment.byId(ownerId, id);
     const data = await fragment.getData();
 
-    if (ext === 'html' && fragment.type === 'text/markdown') {
+    if (ext === 'html' && fragment.mimeType === 'text/markdown') {
       const html = md.render(data.toString());
       res.setHeader('Content-Type', 'text/html');
       return res.status(200).send(html);
     }
 
-    if (ext === 'md' && fragment.type === 'text/markdown') {
+    if (ext === 'json' && fragment.mimeType === 'application/json') {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(200).json(JSON.parse(data.toString()));
+    }
+
+    if (ext === 'txt' && fragment.mimeType === 'text/plain') {
+      res.setHeader('Content-Type', 'text/plain');
+      return res.status(200).send(data);
+    }
+
+    if (ext === 'md' && fragment.mimeType === 'text/markdown') {
       res.setHeader('Content-Type', 'text/markdown');
       return res.status(200).send(data);
     }

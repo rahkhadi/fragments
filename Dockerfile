@@ -16,7 +16,7 @@
     
     # Copy source code
     COPY ./src ./src
-    COPY ./src/model ./src/model
+    # COPY ./src/model ./src/model
     COPY ./tests/.htpasswd ./tests/.htpasswd
     
     # --- Stage 2: Production image (smaller) ---

@@ -12,6 +12,7 @@ module.exports = async (req, res) => {
 
   try {
     const fragments = await Fragment.byUser(ownerId, expand);
+    console.log('Fetched fragments:', fragments);
     res.status(200).json(createSuccessResponse({ fragments }));
   } catch (e) {
     console.error('Failed to fetch fragments', e);

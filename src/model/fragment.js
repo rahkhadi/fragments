@@ -1,10 +1,6 @@
-// Use crypto.randomUUID() to create unique IDs, see:
-// https://nodejs.org/api/crypto.html#cryptorandomuuidoptions
+// fragments/src/model/fragment.js
 const { randomUUID } = require('crypto');
-// Use https://www.npmjs.com/package/content-type to create/parse Content-Type headers
 const contentType = require('content-type');
-
-// Functions for working with fragment metadata/data using our DB
 const {
   readFragment,
   writeFragment,
@@ -16,15 +12,9 @@ const {
 
 class Fragment {
   constructor({ id, ownerId, created, updated, type, size = 0 }) {
-    if (!ownerId || !type) {
-      throw new Error('ownerId and type are required');
-    }
-    if (typeof size !== 'number' || size < 0) {
-      throw new Error('size must be a non-negative number');
-    }
-    if (!Fragment.isSupportedType(type)) {
-      throw new Error(`Unsupported type: ${type}`);
-    }
+    if (!ownerId || !type) throw new Error('ownerId and type are required');
+    if (typeof size !== 'number' || size < 0) throw new Error('size must be a non-negative number');
+    if (!Fragment.isSupportedType(type)) throw new Error(`Unsupported type: ${type}`);
 
     this.id = id || randomUUID();
     this.ownerId = ownerId;
@@ -59,9 +49,7 @@ class Fragment {
   }
 
   async setData(data) {
-    if (!Buffer.isBuffer(data)) {
-      throw new Error('Data must be a Buffer');
-    }
+    if (!Buffer.isBuffer(data)) throw new Error('Data must be a Buffer');
     this.updated = new Date().toISOString();
     this.size = data.length;
     await writeFragmentData(this.ownerId, this.id, data);
@@ -86,8 +74,12 @@ class Fragment {
     const supportedTypes = [
       'text/plain',
       'text/markdown',
-      'application/json'    
-      // Add more supported types later
+      'text/html',
+      'application/json',
+      'image/png',
+      'image/jpeg',
+      'image/webp',
+      'image/gif',
     ];
     return supportedTypes.includes(type);
   }
