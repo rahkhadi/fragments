@@ -1,3 +1,4 @@
+// fragments/src/routes/api/get-extension.js
 const express = require('express');
 const MarkdownIt = require('markdown-it');
 const md = new MarkdownIt();
@@ -6,37 +7,37 @@ const { Fragment } = require('../../model/fragment');
 
 router.get('/fragments/:id.:ext', async (req, res) => {
   const { id, ext } = req.params;
-  const user = req.user;
+  const ownerId = req.user;
 
   try {
-    const fragment = await Fragment.byId(user, id);
-
-    if (!fragment) {
-      return res.status(404).json({ status: 'error', message: 'Fragment not found' });
-    }
-
-    // Get raw data
+    const fragment = await Fragment.byId(ownerId, id);
     const data = await fragment.getData();
 
-    // Handle Markdown (.md) to HTML (.html)
-    if (ext === 'html' && fragment.type === 'text/markdown') {
+    if (ext === 'html' && fragment.mimeType === 'text/markdown') {
       const html = md.render(data.toString());
       res.setHeader('Content-Type', 'text/html');
       return res.status(200).send(html);
     }
 
-    // Optional: Handle raw markdown
-    if (ext === 'md' && fragment.type === 'text/markdown') {
+    if (ext === 'json' && fragment.mimeType === 'application/json') {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(200).json(JSON.parse(data.toString()));
+    }
+
+    if (ext === 'txt' && fragment.mimeType === 'text/plain') {
+      res.setHeader('Content-Type', 'text/plain');
+      return res.status(200).send(data);
+    }
+
+    if (ext === 'md' && fragment.mimeType === 'text/markdown') {
       res.setHeader('Content-Type', 'text/markdown');
       return res.status(200).send(data);
     }
 
-    // Unsupported type
     return res.status(415).json({ status: 'error', message: 'Unsupported extension conversion' });
-
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ status: 'error', message: 'Server error' });
+    return res.status(404).json({ status: 'error', message: 'Fragment not found' });
   }
 });
 

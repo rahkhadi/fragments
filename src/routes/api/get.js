@@ -3,9 +3,20 @@
 /**
  * Get a list of fragments for the current user
  */
+const { Fragment } = require('../../model/fragment');
 const { createSuccessResponse } = require('../../response');
 
-module.exports = (req, res) => {
-    // TODO: this is just a placeholder. To get something working, return an empty array...
-    res.status(200).json(createSuccessResponse({ fragments: [] }));
-  };
+module.exports = async (req, res) => {
+  const ownerId = req.user;
+  const expand = req.query.expand === '1';
+
+  try {
+    const fragments = await Fragment.byUser(ownerId, expand);
+    console.log('Fetched fragments:', fragments);
+    res.status(200).json(createSuccessResponse({ fragments }));
+  } catch (e) {
+    console.error('Failed to fetch fragments', e);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch fragments' });
+  }
+};
+

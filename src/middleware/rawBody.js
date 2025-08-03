@@ -1,5 +1,4 @@
-// src/middleware/rawBody.js
-
+// fragments/src/middleware/rawBody.js
 const express = require('express');
 const contentType = require('content-type');
 const { Fragment } = require('../model/fragment');
@@ -10,9 +9,9 @@ const rawBody = () =>
     limit: '5mb',
     type: (req) => {
       try {
-        const { type } = contentType.parse(req);
+        const { type } = contentType.parse(req.headers['content-type']);
         return Fragment.isSupportedType(type);
-      } catch {
+      } catch (err) {
         return false;
       }
     },
