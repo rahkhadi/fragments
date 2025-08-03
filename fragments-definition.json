@@ -20,8 +20,8 @@
           { "name": "AWS_REGION", "value": "us-east-1" },
           { "name": "AWS_S3_BUCKET_NAME", "value": "fragments" },
           { "name": "AWS_S3_ENDPOINT_URL", "value": "https://s3.amazonaws.com" },
-          { "name": "COGNITO_CLIENT_ID", "value": "your_cognito_client_id" },
-          { "name": "COGNITO_USER_POOL_ID", "value": "your_cognito_user_pool_id" },
+          { "name": "COGNITO_CLIENT_ID", "value": "1mbifsbohdbpf38vp7dbfdfqrt" },
+          { "name": "COGNITO_USER_POOL_ID", "value": "us-east-1_DuKU5EOar" },
           { "name": "COGNITO_REDIRECT_URI", "value": "http://localhost:3000" }
         ]
       }
