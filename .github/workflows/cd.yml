@@ -44,7 +44,6 @@ jobs:
             aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
             aws-region: us-east-1
 
-
         # Login to our ECR repository using the configured credentials
         - name: Login to Amazon ECR
           id: login-ecr
@@ -68,3 +67,21 @@ jobs:
             push: true
             # Use the git tag version and `latest`
             tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPO }}:${{ env.VERSION_TAG }}, ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPO }}:latest
+
+        # Fill in the new image URI in fragments-definition.json
+        - name: Fill in the new image ID in the Amazon ECS task definition
+          id: render-task-def
+          uses: aws-actions/amazon-ecs-render-task-definition@v1
+          with:
+            task-definition: fragments-definition.json
+            container-name: fragments
+            image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPO }}:${{ env.VERSION_TAG }}
+
+        # Deploy the updated task definition to ECS
+        - name: Deploy to Amazon ECS
+          uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+          with:
+            task-definition: ${{ steps.render-task-def.outputs.task-definition }}
+            service: fragments-service
+            cluster: fragments-cluster
+            wait-for-service-stability: true
