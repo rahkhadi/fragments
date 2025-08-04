@@ -7,8 +7,8 @@ const compression = require('compression');
 const logger = require('./logger');
 const auth = require('./auth');
 const rawBody = require('./middleware/rawBody');
-
 const pino = require('pino-http')({ logger });
+
 const app = express();
 
 // Middleware setup
@@ -21,14 +21,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(rawBody());
 app.use(express.text({ type: ['text/plain', 'text/markdown', 'application/json'] }));
 
+// Passport authentication strategy
 passport.use(auth.strategy());
 app.use(passport.initialize());
 
-// Secure all routes under /v1
-app.use('/v1', auth.authenticate(), require('./routes/api'));
-
-// Public route (optional root endpoint or docs)
+// Mount public root routes (e.g., /health)
 app.use('/', require('./routes'));
+
+// Mount /v1 routes with authentication
+app.use('/v1', auth.authenticate(), require('./routes/api'));
 
 // 404 handler
 app.use((req, res) => {
@@ -38,7 +39,8 @@ app.use((req, res) => {
   });
 });
 
-// Proper error handler
+// Error handler
+// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   const status = err.status || 500;
   const message = err.message || 'unable to process request';
