@@ -6,6 +6,7 @@
   "scripts": {
     "test:watch": "jest -c jest.config.js --runInBand --watch --",
     "test": "jest -c jest.config.js --runInBand --",
+    "test:unit": "jest tests/unit --runInBand",
     "test:integration": "hurl --test --glob \"tests/integration/**/*.hurl\"",
     "coverage": "jest -c jest.config.js --runInBand --coverage",
     "lint": "eslint \"./src/**/*.js\" \"tests/**/*.js\"",
@@ -33,6 +34,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.859.0",
     "aws-jwt-verify": "^5.1.0",
+    "bcrypt": "^6.0.0",
     "compression": "^1.8.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
