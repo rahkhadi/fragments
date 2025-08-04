@@ -12,6 +12,7 @@ const rawBody = () =>
         const { type } = contentType.parse(req.headers['content-type']);
         return Fragment.isSupportedType(type);
       } catch (err) {
+        console.warn('Invalid content-type header:', req.headers['content-type'], err.message);
         return false;
       }
     },
