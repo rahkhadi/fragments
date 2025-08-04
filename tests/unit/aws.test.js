@@ -3,7 +3,7 @@ const {
     readFragment,
     writeFragmentData,
     readFragmentData,
-    deleteFragmentData,
+    // deleteFragmentData,
     listFragments,
     deleteFragment,
   } = require('../../src/model/data/aws');
