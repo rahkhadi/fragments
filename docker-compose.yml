@@ -5,13 +5,13 @@ services:
     init: true
     build: .
     environment:
-      - API_URL=http://localhost:8080
-      - HTPASSWD_FILE=tests/.htpasswd
-      - LOG_LEVEL=${LOG_LEVEL:-debug}
-      - AWS_REGION=us-east-1
-      - AWS_S3_ENDPOINT_URL=http://localstack:4566
-      - AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME:-fragments}
-      - FRAGMENTS_DB_TYPE=aws  # ✅ REQUIRED for using AWS backend
+      API_URL: http://localhost:8080
+      HTPASSWD_FILE: /app/tests/.htpasswd
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+      AWS_REGION: us-east-1
+      AWS_S3_ENDPOINT_URL: http://localstack:4566
+      AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME:-fragments}
+      FRAGMENTS_DB_TYPE: aws
     ports:
       - '8080:8080'
     depends_on:
@@ -23,8 +23,8 @@ services:
     ports:
       - '4566:4566'
     environment:
-      - SERVICES=s3
-      - DEFAULT_REGION=us-east-1
+      SERVICES: s3
+      DEFAULT_REGION: us-east-1
 
   dynamodb-local:
     image: amazon/dynamodb-local
