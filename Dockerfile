@@ -17,17 +17,19 @@
     # Copy source code
     COPY ./src ./src
     COPY ./src/model ./src/model
-    COPY ./tests/.htpasswd ./tests/.htpasswd
+    COPY ./tests/.htpasswd /app/tests/.htpasswd
     
-    # --- Stage 2: Production image (smaller) ---
+    # --- Stage 2 ---
     FROM node:22.12.0-slim
-    
+
     WORKDIR /app
-    
-    # Only copy what is needed to run the app
+
     COPY --from=build /app /app
-    
+
+    # ✅ Make sure .htpasswd is still there (defensive copy)
+    COPY ./tests/.htpasswd /app/tests/.htpasswd
+
     EXPOSE 8080
-    
     CMD ["npm", "start"]
+
     
