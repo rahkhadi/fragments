@@ -29,16 +29,61 @@ jobs:
           dockerfile: Dockerfile
 
   unit-tests:
-    name: Unit Tests
+    name: Unit Tests with AWS
     runs-on: ubuntu-latest
+
+    services:
+      localstack:
+        image: localstack/localstack
+        ports:
+          - 4566:4566
+        options: >-
+          --health-cmd="curl -s http://localhost:4566/_localstack/health | grep '\"s3\": \"running\"'"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+
+      dynamodb:
+        image: amazon/dynamodb-local
+        ports:
+          - 8000:8000
+
+    env:
+      NODE_ENV: test
+      PORT: 8080
+      LOG_LEVEL: debug
+      FRAGMENTS_DB_TYPE: aws
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_SESSION_TOKEN: test
+      AWS_S3_BUCKET_NAME: fragments
+      AWS_S3_ENDPOINT_URL: http://localhost:4566
+      AWS_DYNAMODB_ENDPOINT_URL: http://localhost:8000
+      AWS_DYNAMODB_TABLE_NAME: fragments
+      HTPASSWD_FILE: tests/.htpasswd
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
           cache: 'npm'
-      - run: npm ci
-      - run: npm run test
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Wait for LocalStack
+        run: |
+          until curl -s http://localhost:4566/_localstack/health | grep '"s3": "running"'; do
+            echo "⏳ Waiting for LocalStack to be ready..."
+            sleep 3
+          done
+
+      - name: Setup AWS S3 + DynamoDB
+        run: ./scripts/local-aws-setup.sh
+
+      - name: Run Unit Tests
+        run: env $(grep -v '^#' env.jest | xargs) npm run test
 
   integration-tests:
     name: Integration Tests
@@ -61,6 +106,10 @@ jobs:
           - 8000:8000
 
     env:
+      NODE_ENV: test
+      PORT: 8080
+      LOG_LEVEL: debug
+      FRAGMENTS_DB_TYPE: aws
       AWS_REGION: us-east-1
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
@@ -70,9 +119,6 @@ jobs:
       AWS_DYNAMODB_ENDPOINT_URL: http://localhost:8000
       AWS_DYNAMODB_TABLE_NAME: fragments
       HTPASSWD_FILE: tests/.htpasswd
-      FRAGMENTS_DB_TYPE: aws
-      LOG_LEVEL: silent
-      PORT: 8080
 
     steps:
       - uses: actions/checkout@v4
@@ -90,7 +136,7 @@ jobs:
             sleep 3
           done
 
-      - name: Setup S3 and DynamoDB Tables
+      - name: Setup AWS S3 + DynamoDB
         run: ./scripts/local-aws-setup.sh
 
       - name: Run Integration Tests
@@ -108,7 +154,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Build and Push Docker Image
         env:
           DOCKERHUB_REPO: rahkhadi/fragments
