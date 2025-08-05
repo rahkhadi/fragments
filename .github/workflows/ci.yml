@@ -31,8 +31,26 @@ jobs:
   unit-tests:
     name: Unit Tests with AWS
     runs-on: ubuntu-latest
+
+    services:
+      localstack:
+        image: localstack/localstack
+        ports:
+          - 4566:4566
+        options: >-
+          --health-cmd="curl -s http://localhost:4566/_localstack/health | grep '\"s3\": \"running\"'"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+          --memory=1024m
+          --tmpfs /tmp/localstack
+
+      dynamodb:
+        image: amazon/dynamodb-local
+        ports:
+          - 8000:8000
+
     env:
-      NODE_OPTIONS: '--max-old-space-size=4096'
       NODE_ENV: test
       PORT: 8080
       LOG_LEVEL: debug
@@ -47,34 +65,21 @@ jobs:
       AWS_DYNAMODB_TABLE_NAME: fragments
       HTPASSWD_FILE: tests/.htpasswd
 
-    services:
-      localstack:
-        image: localstack/localstack
-        ports:
-          - 4566:4566
-        options: >-
-          --health-cmd "curl -s http://localhost:4566/_localstack/health | grep '\"s3\": \"running\"'"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 30
-
-      dynamodb:
-        image: amazon/dynamodb-local
-        ports:
-          - 8000:8000
-
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
           cache: 'npm'
-
       - name: Install dependencies
         run: npm ci
 
-      - name: Make setup script executable
-        run: chmod +x ./scripts/local-aws-setup.sh
+      - name: Wait for LocalStack
+        run: |
+          until curl -s http://localhost:4566/_localstack/health | grep '"s3": "running"'; do
+            echo "⏳ Waiting for LocalStack to be ready..."
+            sleep 3
+          done
 
       - name: Setup AWS S3 + DynamoDB
         run: ./scripts/local-aws-setup.sh
@@ -85,8 +90,26 @@ jobs:
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
+
+    services:
+      localstack:
+        image: localstack/localstack
+        ports:
+          - 4566:4566
+        options: >-
+          --health-cmd="curl -s http://localhost:4566/_localstack/health | grep '\"s3\": \"running\"'"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+          --memory=1024m
+          --tmpfs /tmp/localstack
+
+      dynamodb:
+        image: amazon/dynamodb-local
+        ports:
+          - 8000:8000
+
     env:
-      NODE_OPTIONS: '--max-old-space-size=4096'
       NODE_ENV: test
       PORT: 8080
       LOG_LEVEL: debug
@@ -101,34 +124,21 @@ jobs:
       AWS_DYNAMODB_TABLE_NAME: fragments
       HTPASSWD_FILE: tests/.htpasswd
 
-    services:
-      localstack:
-        image: localstack/localstack
-        ports:
-          - 4566:4566
-        options: >-
-          --health-cmd "curl -s http://localhost:4566/_localstack/health | grep '\"s3\": \"running\"'"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 30
-
-      dynamodb:
-        image: amazon/dynamodb-local
-        ports:
-          - 8000:8000
-
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
           cache: 'npm'
-
       - name: Install dependencies
         run: npm ci
 
-      - name: Make setup script executable
-        run: chmod +x ./scripts/local-aws-setup.sh
+      - name: Wait for LocalStack
+        run: |
+          until curl -s http://localhost:4566/_localstack/health | grep '"s3": "running"'; do
+            echo "⏳ Waiting for LocalStack to be ready..."
+            sleep 3
+          done
 
       - name: Setup AWS S3 + DynamoDB
         run: ./scripts/local-aws-setup.sh
@@ -148,7 +158,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Build and Push Docker Image
         env:
           DOCKERHUB_REPO: rahkhadi/fragments
