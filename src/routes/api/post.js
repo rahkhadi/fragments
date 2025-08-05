@@ -1,8 +1,11 @@
 // fragments/src/routes/api/post.js
+const express = require('express');
+const router = express.Router();
 const { Fragment } = require('../../model/fragment');
 const logger = require('../../logger');
 
-module.exports = async (req, res) => {
+// Apply middleware directly inside the router file if needed
+router.post('/', async (req, res) => {
   const ownerId = req.user;
   const type = req.headers['content-type'];
 
@@ -12,7 +15,7 @@ module.exports = async (req, res) => {
       bodyType: typeof req.body,
       isBuffer: Buffer.isBuffer(req.body),
       contentType: type,
-      bodyLength: req.body.length,
+      bodyLength: req.body?.length,
     },
     'Incoming POST /v1/fragments request'
   );
@@ -31,9 +34,11 @@ module.exports = async (req, res) => {
     const host = req.get('host');
     const location = `${protocol}://${host}/v1/fragments/${fragment.id}`;
 
-    res.status(201).setHeader('Location', location).json({ status: 'ok', fragment });
+    return res.status(201).setHeader('Location', location).json({ status: 'ok', fragment });
   } catch (err) {
     logger.error({ err: err.message, stack: err.stack }, 'Failed to create fragment');
-    res.status(415).json({ status: 'error', message: err.message });
+    return res.status(415).json({ status: 'error', message: err.message });
   }
-};
+});
+
+module.exports = router;

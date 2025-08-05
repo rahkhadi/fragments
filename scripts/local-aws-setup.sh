@@ -10,7 +10,7 @@ echo "Waiting for LocalStack S3..."
 until (curl --silent http://localhost:4566/_localstack/health | grep "\"s3\": \"\(running\|available\)\"" > /dev/null); do
   sleep 5
 done
-echo 'LocalStack S3 Ready'
+echo '✅ LocalStack S3 is Ready'
 
 echo "Creating LocalStack S3 bucket: fragments"
 aws --endpoint-url=http://localhost:4566 s3api create-bucket --bucket fragments
@@ -23,3 +23,5 @@ aws --endpoint-url=http://localhost:8000 dynamodb create-table \
   --provisioned-throughput ReadCapacityUnits=10,WriteCapacityUnits=5
 
 aws --endpoint-url=http://localhost:8000 dynamodb wait table-exists --table-name fragments
+
+echo "✅ Setup complete: S3 bucket and DynamoDB table created"

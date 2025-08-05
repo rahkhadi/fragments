@@ -1,35 +1,52 @@
-// fragments/src/model/data/aws/index.js
-
-const MemoryDB = require('../memory-db');
 const s3Client = require('./s3Client');
+const ddbDocClient = require('./ddbDocClient');
 const {
   PutObjectCommand,
   GetObjectCommand,
   DeleteObjectCommand,
 } = require('@aws-sdk/client-s3');
+const {
+  PutCommand,
+  GetCommand,
+  QueryCommand,
+  DeleteCommand,
+} = require('@aws-sdk/lib-dynamodb');
 const logger = require('../../../logger');
 
-const data = new MemoryDB(); // Metadata (ID, owner, type, etc.)
 const bucketName = process.env.AWS_S3_BUCKET_NAME;
 
-/**
- * Write fragment metadata (in-memory).
- */
+// Write fragment metadata to DynamoDB
 function writeFragment(fragment) {
-  return data.put(fragment.ownerId, fragment.id, fragment);
+  const params = {
+    TableName: process.env.AWS_DYNAMODB_TABLE_NAME,
+    Item: fragment,
+  };
+  const command = new PutCommand(params);
+  try {
+    return ddbDocClient.send(command);
+  } catch (err) {
+    logger.warn({ err, params, fragment }, 'Error writing fragment metadata to DynamoDB');
+    throw err;
+  }
 }
 
-/**
- * Read fragment metadata (from memory).
- */
+// Read fragment metadata from DynamoDB
 async function readFragment(ownerId, id) {
-  const serialized = await data.get(ownerId, id);
-  return typeof serialized === 'string' ? JSON.parse(serialized) : serialized;
+  const params = {
+    TableName: process.env.AWS_DYNAMODB_TABLE_NAME,
+    Key: { ownerId, id },
+  };
+  const command = new GetCommand(params);
+  try {
+    const data = await ddbDocClient.send(command);
+    return data?.Item;
+  } catch (err) {
+    logger.warn({ err, params }, 'Error reading fragment metadata from DynamoDB');
+    throw err;
+  }
 }
 
-/**
- * Upload raw fragment data to S3.
- */
+// Upload fragment data to S3
 async function writeFragmentData(ownerId, id, buffer) {
   const command = new PutObjectCommand({
     Bucket: bucketName,
@@ -44,9 +61,7 @@ async function writeFragmentData(ownerId, id, buffer) {
   }
 }
 
-/**
- * Helper to read S3 stream into Buffer.
- */
+// Read raw S3 stream into Buffer
 const streamToBuffer = (stream) =>
   new Promise((resolve, reject) => {
     const chunks = [];
@@ -55,9 +70,7 @@ const streamToBuffer = (stream) =>
     stream.on('end', () => resolve(Buffer.concat(chunks)));
   });
 
-/**
- * Read raw fragment data from S3.
- */
+// Read fragment data from S3
 async function readFragmentData(ownerId, id) {
   const command = new GetObjectCommand({
     Bucket: bucketName,
@@ -72,9 +85,7 @@ async function readFragmentData(ownerId, id) {
   }
 }
 
-/**
- * Delete raw fragment data from S3.
- */
+// Delete fragment data from S3
 async function deleteFragmentData(ownerId, id) {
   const command = new DeleteObjectCommand({
     Bucket: bucketName,
@@ -88,33 +99,51 @@ async function deleteFragmentData(ownerId, id) {
   }
 }
 
-/**
- * List fragment IDs or full metadata for a user.
- */
+// List fragments (ids or full metadata) for a user
 async function listFragments(ownerId, expand = false) {
+  const params = {
+    TableName: process.env.AWS_DYNAMODB_TABLE_NAME,
+    KeyConditionExpression: 'ownerId = :ownerId',
+    ExpressionAttributeValues: {
+      ':ownerId': ownerId,
+    },
+  };
+
+  if (!expand) {
+    params.ProjectionExpression = 'id';
+  }
+
+  const command = new QueryCommand(params);
   try {
-    const all = await data.query(ownerId) || [];
-    console.log('📦 listFragments raw metadata:', all);
-
-    const result = all
-      .map((f) => (expand ? f : f.id))
-      .filter(Boolean);
-
-    console.log('✅ listFragments parsed result:', result);
-    return result;
+    const data = await ddbDocClient.send(command);
+    return !expand ? data?.Items.map((i) => i.id) : data?.Items;
   } catch (err) {
-    console.error('❌ listFragments failed:', err);
-    throw new Error('Error listing fragments');
+    logger.error({ err, params }, 'Error listing fragments from DynamoDB');
+    throw err;
   }
 }
 
-
-/**
- * Delete both metadata and data for a fragment.
- */
+// Delete fragment metadata (DynamoDB) and data (S3)
 async function deleteFragment(ownerId, id) {
-  await data.del(ownerId, id);
-  return deleteFragmentData(ownerId, id);
+  // Delete fragment data from S3
+  try {
+    await deleteFragmentData(ownerId, id);
+  } catch (err) {
+    logger.warn({ err, ownerId, id }, 'Error deleting fragment data from S3');
+  }
+
+  // Delete metadata from DynamoDB
+  const params = {
+    TableName: process.env.AWS_DYNAMODB_TABLE_NAME,
+    Key: { ownerId, id },
+  };
+  const command = new DeleteCommand(params);
+  try {
+    await ddbDocClient.send(command);
+  } catch (err) {
+    logger.warn({ err, params }, 'Error deleting fragment metadata from DynamoDB');
+    throw err;
+  }
 }
 
 module.exports = {

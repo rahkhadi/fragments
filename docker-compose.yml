@@ -5,13 +5,18 @@ services:
     init: true
     build: .
     environment:
-      API_URL: http://localhost:8080
-      HTPASSWD_FILE: /app/tests/.htpasswd
-      LOG_LEVEL: ${LOG_LEVEL:-debug}
-      AWS_REGION: us-east-1
-      AWS_S3_ENDPOINT_URL: http://localstack:4566
-      AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME:-fragments}
-      FRAGMENTS_DB_TYPE: aws
+      - API_URL=http://localhost:8080
+      - HTPASSWD_FILE=tests/.htpasswd
+      - LOG_LEVEL=debug
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_SESSION_TOKEN=test
+      - AWS_S3_ENDPOINT_URL=http://localstack:4566
+      - AWS_DYNAMODB_ENDPOINT_URL=http://dynamodb-local:8000
+      - AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME:-fragments}
+      - AWS_DYNAMODB_TABLE_NAME=${AWS_DYNAMODB_TABLE_NAME:-fragments}
+      - FRAGMENTS_DB_TYPE=aws
     ports:
       - '8080:8080'
     depends_on:
@@ -23,11 +28,21 @@ services:
     ports:
       - '4566:4566'
     environment:
-      SERVICES: s3
-      DEFAULT_REGION: us-east-1
+      - SERVICES=s3
+      - DEFAULT_REGION=us-east-1
 
   dynamodb-local:
     image: amazon/dynamodb-local
     ports:
       - '8000:8000'
     command: ['-jar', 'DynamoDBLocal.jar', '-inMemory']
+
+  fragments-ui:
+    build:
+      context: ../fragments-ui
+      args:
+        VITE_API_URL: http://34.200.152.91:8080
+    ports:
+      - '8081:80'
+    depends_on:
+      - fragments

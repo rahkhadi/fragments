@@ -69,10 +69,38 @@ jobs:
         # 2. Use `install-ci-test` to do it in a single command, see https://docs.npmjs.com/cli/v8/commands/npm-install-ci-test
         run: npm install-ci-test
 
+  # Integration test job to validate our S3 + DynamoDB work
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install node dependencies
+        # We need all devDependencies for Hurl and testing
+        run: npm install
+
+      - name: Start Docker containers (LocalStack, DynamoDB, Fragments)
+        run: docker compose up -d
+
+      - name: Setup Local AWS Resources (S3 bucket + DynamoDB table)
+        # This script must be executable locally (`chmod +x scripts/local-aws-setup.sh`)
+        run: ./scripts/local-aws-setup.sh
+
+      - name: Run Hurl Integration Tests
+        run: npm run test:integration
+
   docker-hub:
     name: Build and Push to Docker Hub
-    # Don't bother running this job unless the other three all pass
-    needs: [lint, dockerfile-lint, unit-tests]
+    # Don't bother running this job unless the other four all pass
+    needs: [lint, dockerfile-lint, unit-tests, integration-tests]
     runs-on: ubuntu-latest
     steps:
       # Set up buildx for optimal Docker Builds, see:

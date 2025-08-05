@@ -1,4 +1,3 @@
-// fragments/src/middleware/rawBody.js
 const express = require('express');
 const contentType = require('content-type');
 const { Fragment } = require('../model/fragment');
