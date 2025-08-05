@@ -4,15 +4,15 @@
   "version": "0.10.0",
   "description": "Fragments back-end API",
   "scripts": {
-    "test:watch": "jest -c jest.config.js --runInBand --watch --",
-    "test": "env $(cat env.jest | xargs) jest -c jest.config.js --runInBand --",
-    "test:unit": "jest tests/unit --runInBand",
-    "test:integration": "hurl --test --glob \"tests/integration/**/*.hurl\"",
-    "coverage": "jest -c jest.config.js --runInBand --coverage",
-    "lint": "eslint \"./src/**/*.js\" \"tests/**/*.js\"",
     "start": "node src/index.js",
     "dev": "LOG_LEVEL=debug nodemon ./src/index.js --watch src",
-    "debug": "LOG_LEVEL=debug nodemon --inspect=0.0.0.0:9229 ./src/index.js --watch src"
+    "debug": "LOG_LEVEL=debug nodemon --inspect=0.0.0.0:9229 ./src/index.js --watch src",
+    "lint": "eslint \"./src/**/*.js\" \"tests/**/*.js\"",
+    "test": "env $(cat env.jest | xargs) jest -c jest.config.js --runInBand --",
+    "test:unit": "jest tests/unit --runInBand",
+    "test:watch": "jest -c jest.config.js --runInBand --watch --",
+    "coverage": "jest -c jest.config.js --runInBand --coverage",
+    "test:integration": "hurl --test tests/integration/*.hurl"
   },
   "repository": {
     "type": "git",
