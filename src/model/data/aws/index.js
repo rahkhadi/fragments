@@ -125,14 +125,12 @@ async function listFragments(ownerId, expand = false) {
 
 // Delete fragment metadata (DynamoDB) and data (S3)
 async function deleteFragment(ownerId, id) {
-  // Delete fragment data from S3
   try {
     await deleteFragmentData(ownerId, id);
   } catch (err) {
     logger.warn({ err, ownerId, id }, 'Error deleting fragment data from S3');
   }
 
-  // Delete metadata from DynamoDB
   const params = {
     TableName: process.env.AWS_DYNAMODB_TABLE_NAME,
     Key: { ownerId, id },

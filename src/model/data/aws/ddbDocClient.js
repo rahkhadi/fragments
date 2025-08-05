@@ -3,7 +3,6 @@ const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient } = require('@aws-sdk/lib-dynamodb');
 const logger = require('../../../logger');
 
-// Use explicit creds only if provided (local/dev/LocalStack/DynamoDB Local)
 const getCredentials = () => {
   if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
     const credentials = {
@@ -11,7 +10,7 @@ const getCredentials = () => {
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
       sessionToken: process.env.AWS_SESSION_TOKEN,
     };
-    logger.debug('Using extra DynamoDB credentials');
+    logger.debug('Using explicit DynamoDB credentials');
     return credentials;
   }
 };
@@ -36,7 +35,7 @@ const ddbDocClient = DynamoDBDocumentClient.from(ddbClient, {
   marshallOptions: {
     convertEmptyValues: false,
     removeUndefinedValues: false,
-    convertClassInstanceToMap: true, // needed for LocalStack/DynamoDB Local
+    convertClassInstanceToMap: true,
   },
   unmarshallOptions: {
     wrapNumbers: false,
