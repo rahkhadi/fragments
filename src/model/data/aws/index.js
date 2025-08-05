@@ -1,3 +1,4 @@
+// src/model/data/aws/index.js
 const s3Client = require('./s3Client');
 const ddbDocClient = require('./ddbDocClient');
 const {
@@ -15,22 +16,20 @@ const logger = require('../../../logger');
 
 const bucketName = process.env.AWS_S3_BUCKET_NAME;
 
-// Write fragment metadata to DynamoDB
-function writeFragment(fragment) {
+async function writeFragment(fragment) {
   const params = {
     TableName: process.env.AWS_DYNAMODB_TABLE_NAME,
     Item: fragment,
   };
   const command = new PutCommand(params);
   try {
-    return ddbDocClient.send(command);
+    await ddbDocClient.send(command);
   } catch (err) {
     logger.warn({ err, params, fragment }, 'Error writing fragment metadata to DynamoDB');
     throw err;
   }
 }
 
-// Read fragment metadata from DynamoDB
 async function readFragment(ownerId, id) {
   const params = {
     TableName: process.env.AWS_DYNAMODB_TABLE_NAME,
@@ -46,7 +45,6 @@ async function readFragment(ownerId, id) {
   }
 }
 
-// Upload fragment data to S3
 async function writeFragmentData(ownerId, id, buffer) {
   const command = new PutObjectCommand({
     Bucket: bucketName,
@@ -61,7 +59,6 @@ async function writeFragmentData(ownerId, id, buffer) {
   }
 }
 
-// Read raw S3 stream into Buffer
 const streamToBuffer = (stream) =>
   new Promise((resolve, reject) => {
     const chunks = [];
@@ -70,7 +67,6 @@ const streamToBuffer = (stream) =>
     stream.on('end', () => resolve(Buffer.concat(chunks)));
   });
 
-// Read fragment data from S3
 async function readFragmentData(ownerId, id) {
   const command = new GetObjectCommand({
     Bucket: bucketName,
@@ -85,7 +81,6 @@ async function readFragmentData(ownerId, id) {
   }
 }
 
-// Delete fragment data from S3
 async function deleteFragmentData(ownerId, id) {
   const command = new DeleteObjectCommand({
     Bucket: bucketName,
@@ -99,7 +94,6 @@ async function deleteFragmentData(ownerId, id) {
   }
 }
 
-// List fragments (ids or full metadata) for a user
 async function listFragments(ownerId, expand = false) {
   const params = {
     TableName: process.env.AWS_DYNAMODB_TABLE_NAME,
@@ -116,6 +110,7 @@ async function listFragments(ownerId, expand = false) {
   const command = new QueryCommand(params);
   try {
     const data = await ddbDocClient.send(command);
+    logger.debug({ items: data?.Items }, 'Fragments fetched from DynamoDB');
     return !expand ? data?.Items.map((i) => i.id) : data?.Items;
   } catch (err) {
     logger.error({ err, params }, 'Error listing fragments from DynamoDB');
@@ -123,7 +118,6 @@ async function listFragments(ownerId, expand = false) {
   }
 }
 
-// Delete fragment metadata (DynamoDB) and data (S3)
 async function deleteFragment(ownerId, id) {
   try {
     await deleteFragmentData(ownerId, id);

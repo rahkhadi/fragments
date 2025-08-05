@@ -1,7 +1,7 @@
 # --- Stage 1: Build stage ---
     FROM node:22.12.0 AS build
 
-    LABEL maintainer="Rahimullah Khadim Hussain rkhadim-hussain@myseneca.ca"
+    LABEL maintainer="Rahimullah Khadim Hussain <rkhadim-hussain@myseneca.ca>"
     LABEL description="Fragments Node.js Microservice"
     
     ENV PORT=8080
@@ -16,20 +16,19 @@
     
     # Copy source code
     COPY ./src ./src
-    COPY ./src/model ./src/model
     COPY ./tests/.htpasswd /app/tests/.htpasswd
     
-    # --- Stage 2 ---
+    # --- Stage 2: Slim runtime ---
     FROM node:22.12.0-slim
-
+    
     WORKDIR /app
-
+    
     COPY --from=build /app /app
-
-    # ✅ Make sure .htpasswd is still there (defensive copy)
+    
+    # Defensive copy of .htpasswd again
     COPY ./tests/.htpasswd /app/tests/.htpasswd
-
+    
     EXPOSE 8080
+    
     CMD ["npm", "start"]
-
     

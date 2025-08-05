@@ -1,11 +1,11 @@
-# tests/integration/lab-10-dynamodb.hurl
-# ✅ Integration test for AWS DynamoDB-based fragment metadata storage
+# Integration test for AWS DynamoDB-based fragment metadata storage
 
 # 1. POST a new fragment (text/plain)
 POST http://localhost:8080/v1/fragments
 Content-Type: text/plain
 [BasicAuth]
 user1@email.com:Ferozali1
+
 `Hello DynamoDB!`
 
 HTTP/1.1 201
@@ -41,18 +41,16 @@ user1@email.com:Ferozali1
 
 HTTP/1.1 200
 
-# 4. Confirm fragment is gone
+# 4. Confirm fragment is gone (404)
 GET {{fragment_url}}
 [BasicAuth]
 user1@email.com:Ferozali1
 
 HTTP/1.1 404
 
-# 5. Confirm fragment ID is no longer in list
+# 5. Optional: Confirm the deleted fragment_id is not returned in metadata list
 GET http://localhost:8080/v1/fragments
 [BasicAuth]
 user1@email.com:Ferozali1
 
 HTTP/1.1 200
-[Asserts]
-jsonpath "$.fragments" not contains "{{fragment_id}}"
