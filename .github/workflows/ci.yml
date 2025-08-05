@@ -70,11 +70,21 @@ jobs:
       - name: Install node dependencies
         run: npm install
 
-      - name: Start Docker containers (LocalStack, DynamoDB, Fragments)
-        run: docker compose up -d
+      - name: Start Docker containers (LocalStack, DynamoDB, Fragments API & UI)
+        run: |
+          docker compose up -d
+          echo "Waiting for containers to be fully ready..."
+          sleep 20
 
       - name: Setup Local AWS Resources (S3 bucket + DynamoDB table)
         run: ./scripts/local-aws-setup.sh
+
+      - name: Verify Local AWS Resources
+        run: |
+          echo "DynamoDB Tables:"
+          aws --endpoint-url=http://localhost:8000 dynamodb list-tables
+          echo "S3 Buckets:"
+          aws --endpoint-url=http://localhost:4566 s3 ls
 
       - name: Run Hurl Integration Tests
         run: npm run test:integration
@@ -103,4 +113,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          tags: ${{ env.DOCKERHUB_REPO }}:${{ env.SHA_TAG }},${{ env.DOCKERHUB_REPO }}:main,${{ env.DOCKERHUB_REPO }}:latest
+          tags: |
+            ${{ env.DOCKERHUB_REPO }}:${{ env.SHA_TAG }}
+            ${{ env.DOCKERHUB_REPO }}:main
+            ${{ env.DOCKERHUB_REPO }}:latest
