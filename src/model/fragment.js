@@ -25,10 +25,21 @@ class Fragment {
   }
 
   static async byUser(ownerId, expand = false) {
-    const results = await listFragments(ownerId, expand);
-    return expand ? results.map((f) => new Fragment(f)) : results;
+    const items = await listFragments(ownerId, expand);
+    if (!expand) return items; // array of ids
+  
+    // If the data layer didn’t give us ids, fetch the ids explicitly
+    const ids = Array.isArray(items) && items.length && typeof items[0] === 'string'
+      ? items
+      : await listFragments(ownerId, false);
+  
+    if (!ids || ids.length === 0) return [];
+  
+    const metas = await Promise.all(ids.map((id) => readFragment(ownerId, id)));
+    return metas.filter(Boolean).map((m) => new Fragment(m));
   }
-
+  
+  
   static async byId(ownerId, id) {
     const data = await readFragment(ownerId, id);
     if (!data) throw new Error('Fragment not found');
