@@ -1,22 +1,28 @@
 // fragments/src/routes/api/delete.js
-const express = require('express');
-const router = express.Router();
+// Single handler function (NOT an Express router).
+// routes/api/index.js will do: router.delete('/fragments/:id', delHandler)
+
 const { Fragment } = require('../../model/fragment');
-const authenticate = require('../../auth/auth-middleware');
 
-router.delete('/fragments/:id', authenticate('http'), async (req, res, next) => {
+/**
+ * DELETE /v1/fragments/:id
+ * Requires req.user to be set by auth (mounted at /v1 in app.js).
+ */
+module.exports = async function deleteFragment(req, res, next) {
   try {
-    const fragment = await Fragment.byId(req.user, req.params.id);
+    const ownerId = req.user;
+    const { id } = req.params;
 
+    // 404 if the fragment doesn't exist for this user
+    const fragment = await Fragment.byId(ownerId, id);
     if (!fragment) {
       return res.status(404).json({ status: 'error', message: 'Fragment not found' });
     }
 
-    await Fragment.delete(req.user, req.params.id);
-    res.status(200).json({ status: 'ok' });
+    // Delete and return ok
+    await Fragment.delete(ownerId, id);
+    return res.status(200).json({ status: 'ok' });
   } catch (err) {
     next(err);
   }
-});
-
-module.exports = router;
+};
