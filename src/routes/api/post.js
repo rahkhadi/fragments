@@ -4,39 +4,40 @@ const router = express.Router();
 const { Fragment } = require('../../model/fragment');
 const logger = require('../../logger');
 
-// Apply middleware directly inside the router file if needed
+// Strip any "; charset=..." etc.
+const normalizeType = (h = '') => String(h).split(';')[0].trim().toLowerCase();
+
 router.post('/', async (req, res) => {
-  const ownerId = req.user;
-  const type = req.headers['content-type'];
+  const ownerId = req.user;                   // set by auth middleware
+  const rawType = req.headers['content-type'];
+  const type = normalizeType(rawType);
 
   logger.debug(
-    {
-      ownerId,
-      bodyType: typeof req.body,
-      isBuffer: Buffer.isBuffer(req.body),
-      contentType: type,
-      bodyLength: req.body?.length,
-    },
-    'Incoming POST /v1/fragments request'
+    { ownerId, contentType: rawType, normalizedType: type, bodyIsBuffer: Buffer.isBuffer(req.body) },
+    'Incoming POST /v1/fragments'
   );
 
   if (!ownerId || !Buffer.isBuffer(req.body)) {
-    logger.warn({ ownerId }, 'Missing ownerId or body');
-    return res.status(415).json({ status: 'error', message: 'Invalid request' });
+    return res.status(415).json({ status: 'error', message: 'Invalid request body' });
+  }
+  if (!Fragment.isSupportedType(type)) {
+    return res.status(415).json({ status: 'error', message: `Unsupported Content-Type: ${rawType}` });
   }
 
   try {
     const fragment = new Fragment({ ownerId, type, size: req.body.length });
     await fragment.save();
-    await fragment.setData(req.body);
+    await fragment.setData(req.body); // setData() also updates/saves meta
 
-    const protocol = req.protocol || 'http';
-    const host = req.get('host');
-    const location = `${protocol}://${host}/v1/fragments/${fragment.id}`;
+    // Prefer API_URL on ECS; else use forwarded proto/host
+    const proto = req.get('x-forwarded-proto') || req.protocol || 'http';
+    const host  = req.get('host');
+    const base  = process.env.API_URL || `${proto}://${host}`;
+    const location = `${base}/v1/fragments/${fragment.id}`;
 
-    return res.status(201).setHeader('Location', location).json({ status: 'ok', fragment });
+    return res.status(201).set('Location', location).json({ status: 'ok', fragment });
   } catch (err) {
-    logger.error({ err: err.message, stack: err.stack }, 'Failed to create fragment');
+    logger.error({ err }, 'Failed to create fragment');
     return res.status(415).json({ status: 'error', message: err.message });
   }
 });
