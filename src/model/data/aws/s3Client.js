@@ -2,7 +2,18 @@
 const { S3Client } = require('@aws-sdk/client-s3');
 const logger = require('../../../logger');
 
+const shouldUseLocalstack = !!process.env.AWS_S3_ENDPOINT_URL;
+
 const getCredentials = () => {
+  // For LocalStack, any static creds are fine (and sometimes required)
+  if (shouldUseLocalstack) {
+    return {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'test',
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'test',
+      sessionToken: process.env.AWS_SESSION_TOKEN || 'test',
+    };
+  }
+  // In AWS (ECS/EKS/EC2), return undefined so the SDK uses the IAM role
   if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
     return {
       accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -10,12 +21,7 @@ const getCredentials = () => {
       sessionToken: process.env.AWS_SESSION_TOKEN,
     };
   }
-  // Default LocalStack credentials fallback
-  return {
-    accessKeyId: 'test',
-    secretAccessKey: 'test',
-    sessionToken: 'test',
-  };
+  return undefined;
 };
 
 const getS3Endpoint = () => {
@@ -23,11 +29,12 @@ const getS3Endpoint = () => {
     logger.debug({ endpoint: process.env.AWS_S3_ENDPOINT_URL }, 'Using alternate S3 endpoint');
     return process.env.AWS_S3_ENDPOINT_URL;
   }
+  return undefined;
 };
 
 module.exports = new S3Client({
   region: process.env.AWS_REGION || 'us-east-1',
-  credentials: getCredentials(),
   endpoint: getS3Endpoint(),
-  forcePathStyle: true,
+  credentials: getCredentials(),   // undefined on AWS ⇒ uses role
+  forcePathStyle: !!process.env.AWS_S3_ENDPOINT_URL,
 });
