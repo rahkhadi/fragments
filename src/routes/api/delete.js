@@ -4,25 +4,26 @@
 
 const { Fragment } = require('../../model/fragment');
 
-/**
- * DELETE /v1/fragments/:id
- * Requires req.user to be set by auth (mounted at /v1 in app.js).
- */
 module.exports = async function deleteFragment(req, res, next) {
   try {
     const ownerId = req.user;
     const { id } = req.params;
 
-    // 404 if the fragment doesn't exist for this user
-    const fragment = await Fragment.byId(ownerId, id);
+    // CHANGE: Fragment.byId() throws when not found; catch and return 404
+    let fragment;
+    try {
+      fragment = await Fragment.byId(ownerId, id);
+    } catch {
+      return res.status(404).json({ status: 'error', message: 'Fragment not found' });
+    }
     if (!fragment) {
       return res.status(404).json({ status: 'error', message: 'Fragment not found' });
     }
 
-    // Delete and return ok
     await Fragment.delete(ownerId, id);
     return res.status(200).json({ status: 'ok' });
   } catch (err) {
+    // unchanged: unexpected errors bubble to error middleware
     next(err);
   }
 };

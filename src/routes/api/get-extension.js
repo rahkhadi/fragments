@@ -1,4 +1,3 @@
-// fragments/src/routes/api/get-extension.js
 const express = require('express');
 const MarkdownIt = require('markdown-it');
 const escapeHtml = require('escape-html');
@@ -38,10 +37,31 @@ router.get('/fragments/:id.:ext', async (req, res) => {
 
     // ---------- TEXT / JSON ----------
     if (wantMime.startsWith('text/') || wantMime === 'application/json') {
-      // JSON -> JSON (pass-through)
+      // JSON -> JSON
       if (srcType === 'application/json' && wantMime === 'application/json') {
+        // CHANGE: normalize JSON so tests (and clients) always get the *actual* JSON,
+        // not a stringified Buffer object like {"type":"Buffer","data":[...]}.
+        let raw = text(); // UTF-8 string of whatever was stored
+        try {
+          const firstParse = JSON.parse(raw);
+          // If the stored string looks like a Buffer JSON ({"type":"Buffer","data":[...]}),
+          // unwrap it back to the original inner string.
+          if (firstParse && firstParse.type === 'Buffer' && Array.isArray(firstParse.data)) {
+            const inner = Buffer.from(firstParse.data).toString('utf8');
+            // If the inner string is itself JSON, return that JSON.
+            try {
+              raw = JSON.stringify(JSON.parse(inner));
+            } catch {
+              // Inner wasn’t valid JSON; just return the inner string as-is.
+              raw = inner;
+            }
+          }
+        } catch {
+          // If raw wasn't JSON at all, just return it unchanged.
+        }
+
         res.setHeader('Content-Type', 'application/json');
-        return res.status(200).send(data);
+        return res.status(200).send(raw);
       }
 
       // TEXT/MARKDOWN family conversions
