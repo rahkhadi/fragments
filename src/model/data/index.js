@@ -15,12 +15,18 @@ if (useAws) {
     readFragment: (ownerId, id) => db.get(ownerId, id),
     deleteFragment: async (ownerId, id) => {
       await db.del(ownerId, id);
-      return db.del(ownerId, `${id}:data`);
+      try {
+        await db.del(ownerId, `${id}:data`);
+      } catch { /* ignore */ }
+      
     },
     listFragments: async (ownerId, expand = false) => {
       const all = await db.query(ownerId);
-      return all.map((f) => (expand ? f : f.id)).filter(Boolean);
+      const metas = all.filter((v) => v && typeof v === 'object' && !Buffer.isBuffer(v) && v.id);
+      return expand ? metas : metas.map((m) => m.id);
     },
+    
+    
 
     // Data
     writeFragmentData: (ownerId, id, buffer) => db.put(ownerId, `${id}:data`, buffer),
