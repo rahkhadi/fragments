@@ -73,12 +73,26 @@ class Fragment {
   }
 
   get isText() {
-    return this.mimeType.startsWith('text/');
+    return this.mimeType.startsWith('text/') || this.mimeType === 'application/json';
   }
-
+  
   get formats() {
-    return [this.mimeType];
+    const t = this.mimeType;
+  
+    // Text & JSON: model only reports the original type
+    if (t.startsWith('text/') || t === 'application/json') {
+      return [t];
+    }
+  
+    // Images: multiple output formats supported
+    if (t === 'image/png')  return ['image/png', 'image/jpeg', 'image/webp'];
+    if (t === 'image/jpeg') return ['image/jpeg', 'image/png', 'image/webp'];
+    if (t === 'image/webp') return ['image/webp', 'image/png', 'image/jpeg'];
+    if (t === 'image/gif')  return ['image/gif'];
+  
+    return [t];
   }
+  
 
   static isSupportedType(value) {
     const { type } = contentType.parse(value);
