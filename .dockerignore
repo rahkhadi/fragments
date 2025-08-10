@@ -3,10 +3,14 @@ coverage
 .env
 .git
 .gitignore
+.env.*
+*.pem
+*.key
 .vscode
 .DS_Store
 .prettier*
 jest*
+coverage
 
 # Keep all source files and tests
 !src/
