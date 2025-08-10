@@ -11,7 +11,7 @@
     "test": "env $(grep -v '^#' env.jest | xargs) jest -c jest.config.js --runInBand --",
     "test:unit": "jest tests/unit --runInBand",
     "test:watch": "jest -c jest.config.js --runInBand --watch --",
-    "coverage": "jest -c jest.config.js --runInBand --coverage",
+    "coverage": "env $(grep -v '^#' env.jest | xargs) jest -c jest.config.js --runInBand --coverage",
     "test:integration": "hurl --test tests/integration/*.hurl"
   },
   "repository": {
